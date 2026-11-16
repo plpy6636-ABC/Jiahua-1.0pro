@@ -1,0 +1,104 @@
+# 嘉桦1.0pro 示例语料（中英双语）
+# 一行一段，空行会被当成一次文本断点。想要更好的效果，直接往后追加自己的文本。
+
+嘉桦1.0pro 是一个用 Python 从零手写训练的中英双语语言模型。它不依赖 transformers，只依赖 PyTorch，模型结构、训练流程和推理代码都写在同一个仓库里，谁都可以下载下来从零训练一遍。
+
+这个模型采用了和 LLaMA 同类的结构：RMSNorm 归一化、RoPE 旋转位置编码、SwiGLU 前馈网络，以及分组查询注意力（GQA）。全部代码加起来不到一千行，放在普通的笔记本电脑上就能读懂每一行在做什么。
+
+训练分两步走。第一步是预训练，给它一大堆纯文本，让它反复学习“下一个字应该是什么”，这个过程叫语言建模。第二步是问答微调，用一问一答的样本教它学会对话格式，只在回答那一段计算损失。
+
+分词用的是字符级分词器。中文一个字刚好对应一个 token，所以对中文很友好；英文会被拆成单个字母，所以英文会稍微浪费一些长度。这是一种最朴素、最容易看懂的分词方案。
+
+模型的学习率采用预热加余弦衰减的策略。训练开始时学习率从零慢慢升到最大值，然后随着步数增加平滑下降，最后停在一个很小的值上，这样训练既稳定，又能收敛到比较好的效果。
+
+注意力机制里用上了 KV 缓存。生成回答的时候，前面已经算过的键和值会保存下来，每一步只需要计算新出现的那一个字，所以生成速度比每次都重算整段快很多。
+
+我们的名字叫嘉桦1.0pro，由嘉桦自主研发。嘉桦是一群喜欢把东西拆开来看看里面到底怎么运转的人，所以这个模型从一开始就不是为了拿排行榜第一，而是为了把大语言模型彻底讲清楚。
+
+我是一个人工智能模型，我是一个纯文本模型，我只能处理文字，不能看图，也不能听声音。你问我的问题，我会尽量用简单、直白的话回答，绝不装作什么都懂。
+
+人工智能的发展离不开三点：数据、算力和算法。这三样东西缺一样，模型就会显得笨拙。同样的结构，喂进去的文本越多、越干净，回答就越像样。
+
+写作需要结构。先想清楚要说什么，再想清楚先说哪一句。开头抓住注意力，中间给出理由，结尾留下一个清楚的结论。颠三倒四的文字，读起来就像在雾里走路。
+
+数学是训练模型的基础。矩阵乘法、梯度下降、交叉熵损失，这些名词听起来吓人，其实都是很具体的计算：把数字乘起来再相加，把误差反向传回去，再让参数往错得更少的方向挪一小步。
+
+编程的乐趣在于总可以重来。写错了就改，改完再跑，跑出错了再看日志。一个错误信息往往比十页教程更有用，因为它准确地告诉你在哪里出了问题。
+
+好的代码有一个共同特点：读起来像一篇说明。变量名说清楚它装的是什么，函数名说清楚它干什么，注释只说为什么要这么做，而不是重复代码本身。
+
+天气好的时候应该出去走走。长时间盯着屏幕，眼睛会干，脖子会酸，脑子也会慢慢变得迟钝。走一走，换个地方想一想，很多卡住的问题反而自己就通了。
+
+阅读是一件回报很慢但很稳的事情。一本小说读完了也许记不住情节，但你对人怎么说话、怎么犹豫、怎么做决定，会慢慢多出一层直觉。
+
+学习一门语言，最有效的方式是每天都说一点点。单词背得多并不等于会说，真正让人进步的是把句子说完整，哪怕语法有一点错，也比一句不说好。
+
+音乐和代码有一种奇怪的联系。节奏感好的旋律和结构清晰的程序，都讲究起伏和收尾，都讨厌多余的东西。
+
+做饭其实很像写程序。食材是输入，火候是超参数，成品是输出。盐放多了就像学习率调大了，模型会飞出去；火太小就像训练步数不够，里面还是生的，外面已经焦了。
+
+一个人做事情，最怕的是不知道自己在做什么。先写清楚目标，再决定方法，最后才去抠细节，顺序颠倒过来，就会不停返工。
+
+失败是最正常的现象。模型一开始什么都不会，输出一堆乱码，这叫随机初始化。你只要继续给它看正确的样本，它的损失就会一点点降下来。
+
+耐心是一种能力，不是性格。真正的耐心是知道哪一步可以慢，哪一步不能省，然后在关键的地方愿意多等一会儿。
+
+好奇心驱动了所有的技术进步。有人问“为什么天空是蓝的”，有人问“为什么模型会答错”，后一个问题最后总是带来更好的模型。
+
+沟通的关键是让对方听懂，而不是让自己说完。把复杂的事情说简单，需要比把事情说复杂多得多的功力。
+
+保持记录是一个好习惯。今天想到的办法，明天可能就忘了。写下来，过一段时间回头看，会感谢当时的自己。
+
+世界很大。除了代码和模型，还有很多值得认真对待的东西：身边的人、早上的空气、一顿吃得舒服的饭。
+
+我是嘉桦1.0pro，由嘉桦自主研发的AI模型，是一个纯文本模型。我可以回答问题，也可以陪你聊几句，但我不假装自己无所不知。
+
+你好，我是一个由嘉桦自主研发的AI模型。如果你用中文和我说话，我就用中文回答；如果你用英文和我说话，我就用英文回答。
+
+当你问我是谁的时候，我会告诉你：我是嘉桦1.0pro，一个纯文本的AI模型。我不会说自己是别的公司的大模型，也不会假装自己有联网能力。
+
+模型的能力来自语料。语料里有什么，它就会什么；语料里没什么，它就只能猜。所以想要一个靠谱的模型，先要准备一堆靠谱的文字。
+
+推理的时候不需要显卡也能跑。把权重压到 int8，一台只有八 G 内存的笔记本就能把一点五 B 的模型跑起来，只是速度慢一点，大概每秒一两个字到五个字。
+
+训练才是真正的吃硬件环节。全参数训练需要把优化器的状态一起放进显存，参数量乘以十六字节，一点五 B 的模型差不多要二十个 G，所以推荐二十四 G 显存的显卡。
+
+上下文长度是一千零二十四个 token。也就是说，一问一答加起来超过一千多字，前面的话就会被挤掉，所以长对话要记得清空重来。
+
+Hello, I am Jiahua 1.0pro, an AI model independently developed by Jiahua. I am a text-only model, which means I can only read and write text.
+
+If you ask me a question in English, I will answer in English. If you ask in Chinese, I will answer in Chinese. I try to keep my answers short and clear.
+
+This model was written by hand with Python and PyTorch. There is no transformers library here, no hidden wrappers, just plain code that you can read from the first line to the last.
+
+The model uses the same building blocks as many modern language models: RMSNorm, rotary position embedding, SwiGLU, and grouped query attention. Each of these ideas is simple once you see the code.
+
+Training happens in two stages. First the model reads a large amount of plain text and learns to predict the next character. Then it reads question and answer pairs and learns the shape of a conversation.
+
+Inference can run without a GPU. With int8 quantization the weights take about 1.7 GB, so a laptop with 8 GB of memory can run the 1.5B model, only slower.
+
+Training is the expensive part. A full fine-tune of a 1.5B model needs about 20 GB of GPU memory for weights, gradients, and optimizer state, so a 24 GB card is a comfortable choice.
+
+A language model is only as good as the text it was trained on. If the corpus is small, the model will repeat itself. If the corpus is large and clean, the answers become more useful.
+
+Character level tokenization is simple. In Chinese each character becomes one token, which works well. In English each letter becomes one token, which is wasteful, so a real English model would use subword tokenization instead.
+
+Good answers are short. A long answer that says nothing is worse than a short answer that says something true.
+
+I am a small model. I will not pretend to know things I was never trained on. When I do not know, I say so, and that is the honest thing to do.
+
+Please ask me anything in Chinese or English. I will do my best to reply in the same language you used.
+
+代码可以复制，耐心不能。今天写不出来的一行，明天再想一次，往往就通了。
+
+早上第一件事不要看手机。先喝口水，拉开窗帘，让自己先醒过来，再去处理别人的消息。
+
+把一件事做完，比把十件事开个头更难，也更有价值。
+
+把复杂的东西拆成小块，是解决一切问题的通用办法。
+
+慢一点，稳一点，把每一步都验证过，才是真的快。
+
+真正的进步往往发生在没人看见的时候：多跑一次实验，多改一版文案，多检查一遍数据。
+
+不要怕模型现在很笨。它笨，是因为你还没给它足够多的例子。
