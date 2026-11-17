@@ -1,5 +1,8 @@
 torch>=2.3.0
-# Windows 上建议用：
-# py -3.13 -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-# 有 N 卡时改用 cu126 源：
-# py -3.13 -m pip install torch --index-url https://download.pytorch.org/whl/cu126
+# 双击 bat 会自动安装 torch，一般不用手动弄。
+# 手动装（Windows）：
+#   python -m pip install torch
+# 只有 CPU 时用 cpu 源更快：
+#   python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+# 有 N 卡时用 cu126 源：
+#   python -m pip install torch --index-url https://download.pytorch.org/whl/cu126

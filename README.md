@@ -7,39 +7,43 @@
 下载代码  ->  双击训练脚本  ->  双击问答脚本  ->  开始提问（中文 / 英文都行）
 ```
 
+> **找不到权重、或问答开不了？** 先双击 **`环境自检.bat`**，它会把缺什么直接列出来。详见第九节。
+
 | 版本 | 主力参数量 | 一句话说明 |
 |---|---|---|
 | 嘉桦1.0pro | **1.5B**（实测 1,507,855,104） | 修好"你是谁"的回答，中英双语，新增 int8 推理 |
 | 嘉桦1.0 | 0.75B（实测 755,148,288） | 第一版，只有中文，问答偏简单 |
 
-**这次 1.0pro 改了什么**
+**这版改了什么**
 
 1. **修好身份问答**：问"你好，你是谁？"，答"你好，我是由嘉桦自主研发的AI模型，是一个纯文本模型。"
 2. **升级到 1.5B**：`configs/1.5b.json`，25 层 / 2304 维 / 18 头（GQA 6 组 K/V）/ SwiGLU 6144。
 3. **中英双语**：语料和问答数据都加了英文，你用英文问，它就用英文答。
 4. **能上 8G 内存**：新增 `--quant8`，1.5B 权重从约 6GB 压到约 1.7GB，8G 内存笔记本能跑。
+5. **脚本不再写死 Python 版本**：以前 bat 里硬写 `py -3.13`，你的电脑上没这个版本就会全部静默失败，训练等于没跑。现在会自动找 3.13/3.12/3.11/3.10/3.9/python/python3 里能用的那一个，没装 torch 还会自动装。
 
 ---
 
 ## 一、下载后三步走（最省事）
 
 1. `git clone https://github.com/plpy6636-ABC/Jiahua-1.0pro.git`（或点 Code → Download ZIP 解压）
-2. 双击 **`一键训练1.5B.bat`** —— 自动建词表、预训练、问答微调
+2. 双击 **`一键训练1.5B.bat`** —— 先检查显存，再自动建词表、预训练、问答微调
 3. 训练完双击 **`一键问答1.5B.bat`** —— 直接开聊，输入 `退出` 结束
 
-> 想先花 3 分钟看看整条流程长什么样：双击 `一键试跑.bat`（357 万参数的小模型，跑完自动提问）。
+> 没有显卡？双击 `一键试跑.bat`（357 万参数，几分钟跑完并自动提问）。
+> 不论是哪个脚本，双击都只负责干活，不会静默失败：缺什么会直接说。
 
-手动命令也一样（Windows 上 `py -3.13`，macOS/Linux 换成 `python3`）：
+手动命令也一样（Windows 上 `python`，macOS/Linux 换成 `python3`；具体解释器名按你装的版本写）：
 
 ```bash
-pip install torch                      # 只有这一个依赖
+python -m pip install torch
 
-py -3.13 tokenizer.py build --data data/corpus.txt data/qa.jsonl --out tokenizer.json
-py -3.13 train.py --config configs/1.5b.json --data data/corpus.txt --out_dir out_1.5b \
+python tokenizer.py build --data data/corpus.txt data/qa.jsonl --out tokenizer.json
+python train.py --config configs/1.5b.json --data data/corpus.txt --out_dir out_1.5b \
    --max_steps 20000 --batch_size 1 --grad_accum 16
-py -3.13 sft.py   --ckpt out_1.5b/ckpt_last.pt --data data/qa.jsonl --out_dir out_1.5b_sft \
+python sft.py   --ckpt out_1.5b/ckpt_last.pt --data data/qa.jsonl --out_dir out_1.5b_sft \
    --max_steps 3000 --batch_size 2 --seq_len 512 --lr 1e-4
-py -3.13 chat.py  --ckpt out_1.5b_sft/ckpt_final.pt --quant8
+python chat.py  --ckpt out_1.5b_sft/ckpt_final.pt --quant8
 ```
 
 ---
@@ -93,15 +97,18 @@ py -3.13 chat.py  --ckpt out_1.5b_sft/ckpt_final.pt --quant8
 | `train.py` | 预训练（学"下一个字是什么"） |
 | `sft.py` | 问答微调（学"问 → 答"） |
 | `chat.py` | **问答脚本**：单问/多轮对话，`--quant8` 走 int8，显存不足自动用 CPU |
-| `configs/1.5b.json` | **1.0pro 主配置**（1.508B） |
-| `configs/0.75b.json` | 1.0 的 0.75B 配置 |
-| `configs/tiny.json` | 试跑配置（357 万参数，3 分钟跑通） |
+| `check_env.py` | **环境自检**：打印 Python、torch、显卡、内存、文件、权重状态 |
+| `env.bat` | 被其他 bat 调用，自动找一个能用的 Python |
+| `configs/1.5b.json` | **主力配置**（1.508B） |
+| `configs/0.75b.json` | 0.75B 配置 |
+| `configs/tiny.json` | 试跑配置（357 万参数，几分钟跑通） |
 | `data/corpus.txt` | 中英双语示例语料（75 段） |
-| `data/qa.jsonl` | 70 条问答样本（含新身份回答 + 英文问答） |
-| `一键训练1.5B.bat` | 下载后点这个训练 |
+| `data/qa.jsonl` | 70 条问答样本（含身份回答 + 英文问答） |
+| `一键训练1.5B.bat` | 下载后点这个训练（先自检显存） |
 | `一键问答1.5B.bat` | 训练完点这个提问 |
-| `一键试跑.bat` | 小模型快速跑通整条流程 |
-| `一键问答.bat` | 用试跑产出的权重聊天 |
+| `一键试跑.bat` | 小模型快速跑通整条流程（不需显卡） |
+| `一键问答.bat` | 自动找已有权重（1.5B / 0.75B / 试跑都能用） |
+| `环境自检.bat` | 跑不起来先点这个 |
 
 ---
 
@@ -133,11 +140,12 @@ Transformer 主体: 1.416 B
 ```
 用户：你好，你是谁？
 助手：你好，我是由嘉桦自主研发的AI模型，是一个纯文本模型。
-[用时 0.1s，生成 27 字]
 
 用户：who are you
 助手：Hello, I am an AI model independently developed by Jiahua. I am a text-only model.
-[用时 0.2s，生成 82 字]
+
+用户：你是什么模型
+助手：我是嘉桦1.0pro，由嘉桦自主研发，是一个纯文本模型。
 ```
 
 注意：小模型微调步数少了会答偏（试过 900 步时英文会串），加到 1500 步才稳；1.5B 建议至少 3000 步。
@@ -153,7 +161,7 @@ Transformer 主体: 1.416 B
 答：这套分词器是字符级的，中文一个字刚好是一个词，英文就会拆成字母。能用，但费 token、费算力。要做正经英文，得换 BPE/子词分词器（本仓库没做）。
 
 **问：训练很久没反应？**
-答：1.5B 在 CPU 上训练基本不用想，必须显卡。想先看效果就 `一键试跑.bat`。
+答：1.5B 在 CPU 上训练基本不用想，必须显卡。想先看效果就 `一键试跑.bat`。没显卡的电脑双击 `一键训练1.5B.bat` 会在开头就停下并说明原因，不会默默跑一半。
 
 **问：能不能继续加数据？**
 答：能。笔记、小说、问答都行：文本追加到 `data/corpus.txt`，问答追加到 `data/qa.jsonl`（一行一个 `{"q": "...", "a": "..."}`），重跑训练脚本即可；`--resume out_1.5b/ckpt_last.pt` 能接着上次继续。
@@ -165,5 +173,33 @@ Transformer 主体: 1.416 B
 
 ## 八、版本记录
 
-- **1.0pro**（本仓库）：1.5B 配置、中英双语、修好身份回答、int8 推理、一键训练/问答脚本、与其他 1.5B 的结构对比
+- **1.0pro**（本仓库）：1.5B 配置、中英双语、修好身份回答、int8 推理、一键训练/问答脚本、与其他 1.5B 的结构对比；脚本改为自动查找 Python（不再写死 `py -3.13`），新增环境自检
 - **1.0**：0.75B 配置，只有中文，问答偏简单（仓库 `Jiahua-1.0`）
+
+---
+
+## 九、在别的电脑上跑不起来？
+
+先双击 **`环境自检.bat`**（或命令行 `python check_env.py`），它会把下面这些一次列清。
+
+按真实遇到的顺序排：
+
+1. **脚本一点就闪退，什么都没发生**
+   以前 bat 里硬写 `py -3.13`。别的电脑上没装 3.13（或没勾 PATH），`py -3.13` 直接报错，命令全部失效，所以看起来"什么都没跑"。本仓库已修：`env.bat` 会依次试 `py -3.13 / -3.12 / -3.11 / -3.10 / -3.9 / -3 / python / python3`，一个都不行才会明确提示去安装 Python。
+
+2. **训练“跑完了”，但没有权重**
+   权重不会随代码下载，必须真的一直训到结束才有。三种真实原因：
+   - 没有 20GB 以上显存的显卡 → 脚本现在会在开头就明确停下并告诉你，不再白跑；
+   - 中途关窗口 / Ctrl+C → 只留下 `ckpt_last.pt`，可以用 `--resume` 续，但 `ckpt_final.pt` 只会在正式跑完时生成；
+   - 训练其实是报错退出的，只是窗口一闪就关了 → 现在不会一闪而过，出错会停住并提示看报错或跑环境自检。
+
+3. **点问答直接没了，或者提示找不到权重**
+   问答脚本原来只认某一个固定路径。现在 `一键问答.bat` 会按顺序找 `out_1.5b_sft` → `out_0.75b_sft` → `out_tiny_sft`，都找不到才会告诉你"还没训练"，并告诉你去跑哪个脚本。
+
+4. **下载 ZIP 解压后双击还是不行**
+   大概率是解压多套了一层文件夹。确认解压后的目录里能**直接看到** `model.py`、`train.py`、`一键训练1.5B.bat` 这些文件；如果是 `Jiahua-1.0pro/Jiahua-1.0pro/...` 这种双层，把内层剪切出来就行。
+
+5. **中文文件名/输出乱码**
+   bat 开头已经有 `chcp 65001`；如果还乱码，把压缩包解压到**不含中文和空格**的路径（例如 `D:\Jiahua`）再试。
+
+如果环境自检的文字发出来还定位不了，把那段输出贴到 issue 里。
